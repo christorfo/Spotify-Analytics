@@ -1,23 +1,50 @@
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 
-# Replace these with your Spotify API credentials
-CLIENT_ID = "your_client_id"
-CLIENT_SECRET = "your_client_secret"
+def initialize_spotify_api(client_id, client_secret):
+    """
+    Initialize the Spotify API client with the provided credentials.
 
-def search_spotify_tracks(query, limit=10):
+    Args:
+        client_id (str): Spotify API client ID.
+        client_secret (str): Spotify API client secret.
+
+    Returns:
+        spotipy.Spotify: Authenticated Spotify API client.
+    """
+    credentials_manager = SpotifyClientCredentials(
+        client_id=client_id, client_secret=client_secret
+    )
+    return spotipy.Spotify(client_credentials_manager=credentials_manager)
+
+def search_tracks(sp, query, limit=10):
     """
     Search for tracks on Spotify based on a query string.
+
+    Args:
+        sp (spotipy.Spotify): Authenticated Spotify API client.
+        query (str): Search query (e.g., song title or artist).
+        limit (int): Number of results to return (default is 10).
+
+    Returns:
+        list: List of dictionaries containing track details.
     """
-    # Set up authentication with Spotify API
-    client_credentials_manager = SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
-    sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
-    
-    # Search for tracks
     results = sp.search(q=query, type='track', limit=limit)
     tracks = results.get('tracks', {}).get('items', [])
-    
-    # Print track details
-    for idx, track in enumerate(tracks):
-        name = track.get('name')
-        artist = track.get('artists')[0].g
+
+    return [
+        {
+            "name": track.get('name'),
+            "artist": track.get('artists')[0].get('name') if track.get('artists') else 'Unknown Artist',
+            "url": track.get('external_urls', {}).get('spotify', 'No URL')
+        }
+        for track in tracks
+    ]
+
+def display_tracks(tracks):
+    """
+    Display a list of tracks in a formatted way.
+
+    Args:
+        tracks (list): List of dictionaries containing track details.
+    """
